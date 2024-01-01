@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  fastapi: 
+    build: 
+      context: .
+      dockerfile: Dockerfile.fastapi
+    command: bash -c "uvicorn main:app --host 0.0.0.0 --port 8000" 
+    ports:
+     - 8000:8000
+    volumes: 
+     - .:/app
+    depends_on:
+      - rabbitmq
+      - celery 
+      - redis
+    environment: 
+      BROKER: "amqp://rabbitmq"
+      BACKEND: "redis://redis:6379/0"
+  
+  redis:
+    image: redis 
+    ports: 
+      - 6379:6379
+  
+  rabbitmq:
+    image: "rabbitmq:latest"
+  
+  celery: 
+    build: 
+      context: .
+      dockerfile: Dockerfile.celery
+    volumes: 
+     - .:/app
+    environment: 
+      BROKER: "amqp://rabbitmq"
+      BACKEND: "redis://redis:6379/0"
+    depends_on:
+      - rabbitmq 
+      - redis
+  
+
+
+       
